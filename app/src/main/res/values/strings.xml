@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Pocket Noodle</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="default_snake_name">Noodle</string>
+    <string name="button_feed_text">Add Feed</string>
+    <string name="button_shed_text">Add Shed</string>
+    <string name="textview_lastfeed_text">Last Feed:</string>
+    <string name="edit_lastfeed_text">N/A</string>
+    <string name="textview_lastshed_text">Last Shed:</string>
+    <string name="edit_lastshed_text">N/A</string>
+    <string name="button_sync_text">Sync</string>
+    <string name="button_settings_text">Settings</string>
+    <string name="button_feedlog_text">View Feed Log</string>
+    <string name="button_shedlog_text">View Shed Log</string>
+</resources>
