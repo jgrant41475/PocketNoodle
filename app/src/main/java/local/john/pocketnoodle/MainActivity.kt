@@ -272,6 +272,7 @@ internal class MainActivity : AppCompatActivity() {
 
         var pos = 0
         while(!feeds.isNull(pos)) feedSet.add(dateFormatIn.parse(feeds.getString(pos++)))
+
         pos = 0
         while(!sheds.isNull(pos)) shedSet.add(dateFormatIn.parse(sheds.getString(pos++)))
 
@@ -280,7 +281,6 @@ internal class MainActivity : AppCompatActivity() {
 
     private fun saveData(snake: String, ip: String, filename: String, remote_path: String, user: String,
                  pass: String, feeds: Set<Date>, sheds: Set<Date>) {
-
         sharedPref.edit()
                 .putString("snake_name", snake)
                 .putString("ip_address", ip)

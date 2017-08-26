@@ -11,8 +11,8 @@
         android:id="@+id/textSnakeName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="@string/default_snake_name"
         android:textAllCaps="false"
@@ -25,128 +25,127 @@
 
     <Button
         android:id="@+id/buttonFeed"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="84dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="89dp"
         android:layout_marginTop="8dp"
         android:text="@string/button_feed_text"
-        app:layout_constraintEnd_toStartOf="@+id/buttonShed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textSnakeName" />
 
     <Button
         android:id="@+id/buttonShed"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginEnd="89dp"
         android:layout_marginTop="8dp"
         android:text="@string/button_shed_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/buttonFeed"
         app:layout_constraintTop_toBottomOf="@+id/textSnakeName" />
 
     <TextView
         android:id="@+id/textFeed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginStart="137dp"
+        android:layout_marginTop="16dp"
         android:labelFor="@id/lastFeedDate"
         android:text="@string/textview_lastfeed_text"
-        app:layout_constraintEnd_toStartOf="@+id/lastFeedDate"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonFeed" />
 
     <EditText
         android:id="@+id/lastFeedDate"
-        android:layout_width="wrap_content"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="52dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginEnd="48dp"
+        android:layout_marginTop="8dp"
         android:ems="10"
         android:enabled="false"
         android:inputType="date"
         android:text="@string/edit_lastfeed_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textFeed"
         app:layout_constraintTop_toBottomOf="@+id/buttonShed" />
 
     <TextView
         android:id="@+id/textShed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginStart="137dp"
+        android:layout_marginTop="36dp"
         android:labelFor="@+id/lastShedDate"
         android:text="@string/textview_lastshed_text"
-        app:layout_constraintEnd_toStartOf="@+id/lastShedDate"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textFeed" />
 
     <EditText
         android:id="@+id/lastShedDate"
-        android:layout_width="wrap_content"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="54dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginEnd="48dp"
+        android:layout_marginTop="8dp"
         android:ems="10"
         android:enabled="false"
         android:inputType="date"
         android:text="@string/edit_lastshed_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textShed"
         app:layout_constraintTop_toBottomOf="@+id/lastFeedDate" />
 
     <Button
         android:id="@+id/buttonSync"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="32dp"
-        android:text="@string/button_sync_text"
-        app:layout_constraintEnd_toStartOf="@+id/buttonSettings"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toEndOf="@+id/buttonFeedLog"
-        app:layout_constraintTop_toBottomOf="@+id/textShed" />
-
-    <Button
-        android:id="@+id/buttonSettings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:text="@string/button_sync_text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/buttonFeedLog"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/lastShedDate" />
+
+    <Button
+        android:id="@+id/buttonSettings"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
         android:text="@string/button_settings_text"
-        app:layout_constraintEnd_toStartOf="@+id/buttonShedLog"
-        app:layout_constraintHorizontal_bias="0.7"
-        app:layout_constraintStart_toEndOf="@+id/buttonSync"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/buttonShedLog"
         app:layout_constraintTop_toBottomOf="@+id/lastShedDate" />
 
     <Button
         android:id="@+id/buttonFeedLog"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="48dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
         android:text="@string/button_feedlog_text"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textShed" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/buttonShedLog"
+        app:layout_constraintStart_toEndOf="@+id/buttonSync"
+        app:layout_constraintTop_toBottomOf="@+id/lastShedDate" />
 
     <Button
         android:id="@+id/buttonShedLog"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="48dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:text="@string/button_shedlog_text"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/buttonSettings"
+        app:layout_constraintStart_toEndOf="@+id/buttonFeedLog"
         app:layout_constraintTop_toBottomOf="@+id/lastShedDate" />
 
 </android.support.constraint.ConstraintLayout>

@@ -8,8 +8,8 @@ import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPReply
 import java.io.InputStream
 
-class FtpClient(val server: String, val user: String, val pass: String) {
-    var connection: FTPClient
+internal class FtpClient(private val server: String, private val user: String, private val pass: String) {
+    private var connection: FTPClient
 
     init {
         require(Regex("""\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}""").matches(server)) {
@@ -19,7 +19,7 @@ class FtpClient(val server: String, val user: String, val pass: String) {
         connection.configure(FTPClientConfig())
     }
 
-    fun connect(): Boolean {
+    private fun connect(): Boolean {
         try {
             connection.connect(server)
             if (!FTPReply.isPositiveCompletion(connection.replyCode)) {
@@ -32,17 +32,16 @@ class FtpClient(val server: String, val user: String, val pass: String) {
         }
     }
 
-    fun sync(path: String, name: String, stream: InputStream? = null, operation: (String) -> Unit) {
+    internal fun sync(path: String, name: String, stream: InputStream? = null, operation: (String) -> Unit) {
         async(CommonPool) {
             try {
                 if (connect()) {
                     if (connection.login(user, pass)) {
                         if (connection.changeWorkingDirectory(path)) {
-                            val result: String
-                            if(stream != null)// Push
-                                result = if(connection.storeFile(path + name, stream)) "1" else "0"
-                            else // Pull
-                                result = connection.retrieveFileStream(path + name).bufferedReader().readText()
+                            val result: String = if(stream != null)                                 // Push
+                                if(connection.storeFile(path + name, stream)) "1" else "0"
+                            else                                                                    // Pull
+                                connection.retrieveFileStream(path + name).bufferedReader().readText()
 
                             operation(result)
                         } else throw Exception("Could not access directory '$path'")
