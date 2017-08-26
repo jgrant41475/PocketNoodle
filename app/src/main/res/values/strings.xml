@@ -12,4 +12,8 @@
     <string name="button_settings_text">Settings</string>
     <string name="button_feedlog_text">View Feed Log</string>
     <string name="button_shedlog_text">View Shed Log</string>
+    <string name="reset_data">Reset Data</string>
+    <string name="load">Load</string>
+    <string name="save">Save</string>
+    <string name="settings">Settings</string>
 </resources>

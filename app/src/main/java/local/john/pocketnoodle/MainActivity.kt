@@ -41,39 +41,10 @@ internal class MainActivity : AppCompatActivity() {
         buttonShed.setOnLongClickListener { addDate(TYPE_SHED) }
 
         buttonSync.setOnClickListener {
-
-            val server = sharedPref.getString("ip_address", DEFAULT_IP_ADDRESS)
-            val user = sharedPref.getString("user", DEFAULT_USER)
-            val pass = sharedPref.getString("pass", DEFAULT_PASSWORD)
-            val path = sharedPref.getString("remote_path", DEFAULT_REMOTE_PATH)
-            val name = sharedPref.getString("filename", DEFAULT_FILE_NAME)
             val dialogClickListener = DialogInterface.OnClickListener { _, choice ->
                 when (choice) {
-                    DialogInterface.BUTTON_POSITIVE -> { // PUSH
-                        FtpClient(server, user, pass).sync(path, name, getSaveStream()) {
-                            runOnUiThread({
-                                Toast.makeText(applicationContext,
-                                        if(it == "1") "File pushed to server."
-                                        else "Unable to push file to server.", Toast.LENGTH_SHORT).show()
-                            })
-                        }
-                    }
-                    DialogInterface.BUTTON_NEGATIVE -> { // PULL
-                        FtpClient(server, user, pass).sync(path, name) {
-                            runOnUiThread({
-                                if (it == "0")
-                                    Toast.makeText(applicationContext, "Unable to pull file from server.", Toast.LENGTH_SHORT).show()
-                                else {
-                                    Toast.makeText(applicationContext, "File pulled from server.", Toast.LENGTH_SHORT).show()
-                                    try {
-                                        parseJson(JSONObject(JSONTokener(it)))
-                                    } catch (e: Exception) {
-                                        Toast.makeText(applicationContext, "Error parsing file.", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            })
-                        }
-                    }
+                    DialogInterface.BUTTON_POSITIVE -> { save() }
+                    DialogInterface.BUTTON_NEGATIVE -> { load() }
                 }
             }
             AlertDialog.Builder(this)
@@ -110,6 +81,31 @@ internal class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.settings_menu_save -> {
+                confirmYesNo { save() }
+                true
+            }
+            R.id.settings_menu_load -> {
+                val dialogClickListener = DialogInterface.OnClickListener { _, choice ->
+                    when (choice) {
+                        DialogInterface.BUTTON_POSITIVE -> { confirmYesNo { load("PocketNoodle - Monty Python.json") } }
+                        DialogInterface.BUTTON_NEGATIVE -> { confirmYesNo { load("PocketNoodle - Ramen Noodle.json") } }
+                        DialogInterface.BUTTON_NEUTRAL -> {  }
+                    }
+                }
+                AlertDialog.Builder(this)
+                        .setMessage("Quick Load Preset")
+                        .setPositiveButton("Monty Python", dialogClickListener)
+                        .setNegativeButton("Ramen Noodle", dialogClickListener)
+                        .setNeutralButton("Cancel", dialogClickListener)
+                        .setCancelable(true)
+                        .show()
+                true
+            }
+            R.id.setting_menu_settings -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
             R.id.settings_menu_reset -> {
                 confirmYesNo {
                     doReset()
@@ -212,6 +208,40 @@ internal class MainActivity : AppCompatActivity() {
                 .putStringSet("sheds", mutableSetOf())
                 .apply()
 
+    }
+
+    private fun save() {
+        FtpClient(sharedPref.getString("ip_address", DEFAULT_IP_ADDRESS),
+                sharedPref.getString("user", DEFAULT_USER),
+                sharedPref.getString("pass", DEFAULT_PASSWORD))
+                .sync(sharedPref.getString("remote_path", DEFAULT_REMOTE_PATH),
+                        sharedPref.getString("filename", DEFAULT_FILE_NAME), getSaveStream()) {
+                    runOnUiThread({
+                        Toast.makeText(applicationContext,
+                                if(it == "1") "File pushed to server."
+                                else "Unable to push file to server.", Toast.LENGTH_SHORT).show()
+                    })
+                }
+    }
+
+    private fun load(name: String = sharedPref.getString("filename", DEFAULT_FILE_NAME)) {
+        FtpClient(sharedPref.getString("ip_address", DEFAULT_IP_ADDRESS),
+                sharedPref.getString("user", DEFAULT_USER),
+                sharedPref.getString("pass", DEFAULT_PASSWORD))
+                .sync(sharedPref.getString("remote_path", DEFAULT_REMOTE_PATH),name) {
+                    runOnUiThread({
+                        if (it == "0")
+                            Toast.makeText(applicationContext, "Unable to load file from server.", Toast.LENGTH_SHORT).show()
+                        else {
+                            Toast.makeText(applicationContext, "File pulled from server.", Toast.LENGTH_SHORT).show()
+                            try {
+                                parseJson(JSONObject(JSONTokener(it)))
+                            } catch (e: Exception) {
+                                Toast.makeText(applicationContext, "Error parsing file.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    })
+                }
     }
 
     private fun getSaveStream(): InputStream {

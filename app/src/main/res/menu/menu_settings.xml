@@ -2,8 +2,27 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/settings_menu_reset"
+        android:id="@+id/settings_menu_save"
         android:orderInCategory="1"
-        android:title="Reset Data"
-        app:showAsAction="never" />
+        android:title="@string/save"
+        android:icon="@drawable/ic_file_download"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/settings_menu_load"
+        android:orderInCategory="1"
+        android:title="@string/load"
+        android:icon="@drawable/ic_file_upload"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/setting_menu_settings"
+        android:orderInCategory="3"
+        android:title="@string/settings"
+        android:icon="@drawable/ic_action_settings"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/settings_menu_reset"
+        android:orderInCategory="1000"
+        android:title="@string/reset_data"
+        android:icon="@drawable/ic_reset"
+        app:showAsAction="ifRoom" />
 </menu>

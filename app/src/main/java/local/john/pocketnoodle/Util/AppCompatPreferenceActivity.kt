@@ -4,8 +4,11 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.preference.PreferenceActivity
 import android.support.annotation.LayoutRes
+import android.support.v4.app.NavUtils
+import android.support.v4.app.TaskStackBuilder
 import android.support.v7.app.AppCompatDelegate
 import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 
@@ -69,6 +72,14 @@ internal abstract class AppCompatPreferenceActivity : PreferenceActivity() {
     override fun onDestroy() {
         super.onDestroy()
         delegate.onDestroy()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId == android.R.id.home) {
+            NavUtils.navigateUpTo(this, NavUtils.getParentActivityIntent(this))
+            return true
+        }
+        return false
     }
 
     override fun invalidateOptionsMenu() {
