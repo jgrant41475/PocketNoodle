@@ -13,7 +13,7 @@ internal class FtpClient(private val server: String, private val user: String, p
 
     init {
         require(Regex("""\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}""").matches(server)) {
-            "Server address must be in proper dot-decimal format"
+            "Server address must be in dot-decimal format"
         }
         connection = FTPClient()
         connection.configure(FTPClientConfig())
@@ -38,12 +38,15 @@ internal class FtpClient(private val server: String, private val user: String, p
                 if (connect()) {
                     if (connection.login(user, pass)) {
                         if (connection.changeWorkingDirectory(path)) {
-                            val result: String = if(stream != null)                                 // Push
-                                if(connection.storeFile(path + name, stream)) "1" else "0"
-                            else                                                                    // Pull
-                                connection.retrieveFileStream(path + name).bufferedReader().readText()
-
-                            operation(result)
+                            operation(
+                                    if(stream != null)                                              // Push
+                                        if(connection.storeFile(path + name, stream)) "1"
+                                        else "0"
+                                    else                                                            // Pull
+                                        connection.retrieveFileStream(path + name)
+                                            .bufferedReader()
+                                            .readText()
+                            )
                         } else throw Exception("Could not access directory '$path'")
                     } else throw Exception("Invalid login.")
                 } else throw Exception("Connection refused.")

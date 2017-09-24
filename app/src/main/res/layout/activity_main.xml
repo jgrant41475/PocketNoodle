@@ -25,7 +25,7 @@
 
     <Button
         android:id="@+id/buttonFeed"
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="96dp"
@@ -35,7 +35,7 @@
 
     <Button
         android:id="@+id/buttonShed"
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
         android:layout_marginTop="96dp"
@@ -131,5 +131,17 @@
         android:text="@string/button_shedlog_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonSettings" />
+
+    <Button
+        android:id="@+id/buttonProfiles"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="96dp"
+        android:text="@string/profiles"
+        app:layout_constraintEnd_toStartOf="@+id/buttonShed"
+        app:layout_constraintStart_toEndOf="@+id/buttonFeed"
+        app:layout_constraintTop_toBottomOf="@+id/textSnakeName" />
 
 </android.support.constraint.ConstraintLayout>

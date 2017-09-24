@@ -16,6 +16,7 @@ import android.view.View
 internal class LogActivity : AppCompatActivity(), AdapterView.OnItemLongClickListener {
 
     private var sharedPreferences: SharedPreferences? = null
+    private var name: String? = null
 
     private companion object {
         private var logType = -1
@@ -28,12 +29,16 @@ internal class LogActivity : AppCompatActivity(), AdapterView.OnItemLongClickLis
         setContentView(R.layout.activity_log)
 
         logType = intent?.extras?.getInt("type") ?: -1
+        name = intent?.extras?.getString("snake")
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
-        log = sharedPreferences!!.getStringSet(when (logType) {
-                                                    MainActivity.TYPE_FEED -> "feeds"
-                                                    MainActivity.TYPE_SHED -> "sheds"
-                                                    else -> "" }, emptySet()).toMutableList()
+
+
+//        log = sharedPreferences!!.getStringSet(when (logType) {
+//                                                    MainActivity.TYPE_FEED -> "feeds"
+//                                                    MainActivity.TYPE_SHED -> "sheds"
+//                                                    else -> "" }, emptySet()).toMutableList()
 
         if(log.size > 0)
             log = log

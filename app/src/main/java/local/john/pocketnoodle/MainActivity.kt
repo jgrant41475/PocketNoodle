@@ -9,69 +9,102 @@ import android.preference.PreferenceManager
 import android.support.v7.app.AlertDialog
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import local.john.pocketnoodle.Util.DatePickerFragment
-import local.john.pocketnoodle.Util.FtpClient
+import local.john.pocketnoodle.Util.Snake
+import local.john.pocketnoodle.Util.Snakes
 import org.json.JSONArray
-import org.json.JSONObject
-import org.json.JSONTokener
-import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
 internal class MainActivity : AppCompatActivity() {
 
-    private var snakeName: String = DEFAULT_SNAKE_NAME
+    private var sharedPref: SharedPreferences? = null
+        get() = field?.let { it } ?: loadPreferences()
+
+    private var profile = DEFAULT_SNAKE
         set(value) {
-            textSnakeName.text = value
             field = value
+            loadProfile(value)
+            sharedPref?.edit()
+                    ?.putString("last_loaded", value)
+                    ?.apply()
+        }
+
+    // FTP Server default configuration
+    private var ftpServerIP             = "192.168.0.5"
+    private var ftpServerFileName       = "PocketNoodle.json"
+    private var ftpServerPath           = "/Documents/"
+    private var ftpServerUser           = "john"
+    private var ftpServerPass           = "ftppassword"
+
+    private val snakes                  = Snakes(mutableListOf())
+    private var snake: Snake?           = null
+        set(value) {
+            if(!value?.name.isNullOrBlank()) {
+                field = value
+                textSnakeName.text = field?.name
+            } else textSnakeName.text = "N/A"
+
+            updateViews()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        loadData()
+        // Setup
+        loadPreferences()
+        loadProfiles()
+        profile = sharedPref?.getString("last_loaded", DEFAULT_SNAKE) ?: DEFAULT_SNAKE
 
-        buttonFeed.setOnClickListener { confirmYesNo { updateField(TYPE_FEED) } }
-        buttonFeed.setOnLongClickListener { addDate(TYPE_FEED) }
+        // Collect UI elements and assign event handlers
+        buttonFeed.setOnClickListener { confirmYesNo("Add Feed") { addDate(TYPE_FEED) } }
+        buttonFeed.setOnLongClickListener { getDate(TYPE_FEED) }
 
-        buttonShed.setOnClickListener { confirmYesNo { updateField(TYPE_SHED) } }
-        buttonShed.setOnLongClickListener { addDate(TYPE_SHED) }
+        buttonShed.setOnClickListener { confirmYesNo("Add Shed") { addDate(TYPE_SHED) } }
+        buttonShed.setOnLongClickListener { getDate(TYPE_SHED) }
 
-        buttonSync.setOnClickListener {
-            val dialogClickListener = DialogInterface.OnClickListener { _, choice ->
-                when (choice) {
-                    DialogInterface.BUTTON_POSITIVE -> { save() }
-                    DialogInterface.BUTTON_NEGATIVE -> { load() }
-                }
-            }
+        buttonSettings.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
+
+        buttonProfiles.setOnClickListener {
             AlertDialog.Builder(this)
-                    .setMessage("Push or Pull?")
-                    .setPositiveButton("Push", dialogClickListener)
-                    .setNegativeButton("Pull", dialogClickListener)
-                    .setCancelable(true)
-                    .show()
+                    .setTitle("Change Profile")
+                    .setNegativeButton("Cancel", { _,_ -> })
+                    .setItems(snakes.getNames()) { _,pos ->
+                        snakes.get(pos)?.let {
+                            saveProfiles()
+                            profile = it.name
+                        }
+                    }
+                    .create().show()
         }
 
-        buttonSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
         buttonFeedLog.setOnClickListener {
-            startActivityForResult(Intent(this,
-                    LogActivity::class.java).putExtra("type", TYPE_FEED), TYPE_FEED)
+            startActivityForResult(
+                    Intent(this,LogActivity::class.java)
+                            .putExtra("type", TYPE_FEED)
+                            .putExtra("snake", profile), TYPE_FEED)
         }
+
         buttonShedLog.setOnClickListener {
-            startActivityForResult(Intent(this,
-                    LogActivity::class.java).putExtra("type", TYPE_SHED), TYPE_SHED)
+            startActivityForResult(
+                    Intent(this,LogActivity::class.java)
+                            .putExtra("type", TYPE_SHED)
+                            .putExtra("snake", profile), TYPE_SHED)
+        }
+
+        // Launch settings activity on first run
+        if(firstRun()) {
+            sharedPref?.edit()?.putBoolean("first_run", false)?.apply()
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
     }
 
     override fun onResume() {
         super.onResume()
 
-        loadData()
+        loadProfile(profile)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -82,24 +115,11 @@ internal class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.settings_menu_save -> {
-                confirmYesNo { save() }
+                confirmYesNo { saveProfiles() }
                 true
             }
             R.id.settings_menu_load -> {
-                val dialogClickListener = DialogInterface.OnClickListener { _, choice ->
-                    when (choice) {
-                        DialogInterface.BUTTON_POSITIVE -> { confirmYesNo { load("PocketNoodle - Monty Python.json") } }
-                        DialogInterface.BUTTON_NEGATIVE -> { confirmYesNo { load("PocketNoodle - Ramen Noodle.json") } }
-                        DialogInterface.BUTTON_NEUTRAL -> {  }
-                    }
-                }
-                AlertDialog.Builder(this)
-                        .setMessage("Quick Load Preset")
-                        .setPositiveButton("Monty Python", dialogClickListener)
-                        .setNegativeButton("Ramen Noodle", dialogClickListener)
-                        .setNeutralButton("Cancel", dialogClickListener)
-                        .setCancelable(true)
-                        .show()
+
                 true
             }
             R.id.setting_menu_settings -> {
@@ -107,10 +127,7 @@ internal class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.settings_menu_reset -> {
-                confirmYesNo {
-                    doReset()
-                    loadData()
-                }
+                confirmYesNo { doReset() }
                 true
             }
             else -> {
@@ -119,27 +136,89 @@ internal class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadData() {
-        sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        feedDates.clear()
-        shedDates.clear()
+    private fun updateViews() {
+        var lastFeed: Date? = null
+        var lastShed: Date? = null
 
-        if(checkForPrefs()) {
-            snakeName = sharedPref.getString("snake_name", DEFAULT_SNAKE_NAME)
-            if(sharedPref.contains("feeds"))
-                feedDates.addAll(sharedPref.getStringSet("feeds", mutableSetOf())
-                        .map { dateFormatIn.parse(it) }.sorted() )
-            if(sharedPref.contains("sheds"))
-                shedDates.addAll(sharedPref.getStringSet("sheds", mutableSetOf())
-                        .map { dateFormatIn.parse(it) }.sorted())
+        snake?.let {
+            lastFeed = it.feedDates
+                    .map { dateFormatIn.parse(it) }
+                    .sorted()
+                    .lastOrNull()
+
+            lastShed = it.shedDates
+                    .map { dateFormatIn.parse(it) }
+                    .sorted()
+                    .lastOrNull()
         }
-        else
-            sharedPref.edit().putString("snake_name", DEFAULT_SNAKE_NAME).apply()
 
-        updateDateViews()
+        lastFeedDate.setText(if(lastFeed == null) "N/A" else dateFormatOut.format(lastFeed))
+        lastShedDate.setText(if(lastShed == null) "N/A" else dateFormatOut.format(lastShed))
     }
 
-    private fun confirmYesNo(operation: () -> Unit) {
+    private fun doReset() {
+        // Clear SharedPreferences data cache
+        sharedPref!!.edit().clear()
+                .putBoolean("first_run", true)
+                .putString("default_snake", DEFAULT_SNAKE)
+                .putString("ftp_server_ip", ftpServerIP)
+                .putString("ftp_server_file", ftpServerFileName)
+                .putString("ftp_server_path", ftpServerPath)
+                .putString("ftp_server_user", ftpServerUser)
+                .putString("ftp_server_pass", ftpServerPass)
+                .putString("snakes", Snakes(mutableListOf(
+                        Snake("Monty Python", mutableListOf("9-11-17", "9-15-17", "9-21-17"), mutableListOf("7-1-17", "8-1-17")),
+                        Snake("Ramen Noodle", mutableListOf(), mutableListOf()),
+                        Snake("Hank Jr.", mutableListOf(), mutableListOf())
+                )).toString())
+                .apply()
+
+        loadProfiles()
+        profile = ""
+    }
+
+    private fun loadPreferences(): SharedPreferences {
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        return sharedPref!!
+    }
+
+    private fun firstRun(): Boolean = sharedPref?.getBoolean("first_run", true) ?: true
+
+    private fun loadProfiles() {
+        val snakeList = JSONArray(sharedPref?.getString("snakes", "") ?: "")
+        var i = 0
+        val temp = mutableListOf<Snake>()
+
+        while(i < snakeList.length()) {
+            val cur = snakeList.getJSONObject(i++)
+            val name = cur.getString("name")
+            val feeds = cur.getJSONArray("feeds")
+            val sheds = cur.getJSONArray("sheds")
+
+            val tempFeeds = mutableListOf<String>()
+            val tempSheds = mutableListOf<String>()
+
+            var pos = 0
+            while(pos < feeds.length())
+                tempFeeds.add(feeds[pos++].toString())
+
+            pos = 0
+            while(pos < sheds.length())
+                tempSheds.add(sheds[pos++].toString())
+
+            temp.add(Snake(name, tempFeeds, tempSheds))
+        }
+
+        snakes.updateAll(temp)
+    }
+
+    private fun loadProfile(name: String) = snakes.get(name)?.let { snake = it } ?: run { snake = null }
+
+    private fun saveProfiles() = sharedPref!!.edit()
+                                    .putString("snakes", snakes.toString())
+                                    .apply()
+
+    private fun confirmYesNo(title: String = "Pocket Noodle", operation: () -> Unit) {
         val dialogClickListener = DialogInterface.OnClickListener { _, choice ->
             when (choice) {
                 DialogInterface.BUTTON_POSITIVE -> {
@@ -149,167 +228,44 @@ internal class MainActivity : AppCompatActivity() {
             }
         }
         AlertDialog.Builder(this)
+                .setTitle(title)
                 .setMessage("Are you sure?")
                 .setPositiveButton("Yes", dialogClickListener)
                 .setNegativeButton("No", dialogClickListener)
                 .show()
     }
 
-    private fun addDate(type: Int): Boolean {
+    private fun getDate(type: Int): Boolean {
         DatePickerFragment({
-            confirmYesNo { updateField(type, dateFormatIn.parse(it)) }
+            confirmYesNo("Add " +
+                    when (type) {
+                        TYPE_FEED -> "Feed"
+                        TYPE_SHED -> "Shed"
+                        else -> "???"
+                    }) { addDate(type, dateFormatIn.parse(it)) }
         }).show(fragmentManager, "datePicker")
+
+        return false
+    }
+
+    private fun addDate(type: Int, date: Date = Date()): Boolean {
+        when (type) {
+            TYPE_FEED -> snake?.feedDates?.add(dateFormatIn.format(date))
+            TYPE_SHED -> snake?.shedDates?.add(dateFormatIn.format(date))
+            else -> return false
+        }
+
+        saveProfiles()
+        updateViews()
 
         return true
     }
 
-    private fun updateField(field: Int, date: Date = dateFormatIn.parse(dateFormatIn.format(Date()))) {
-        val editor = sharedPref.edit()
-
-        if(field == TYPE_FEED) {
-            feedDates.add(date)
-            editor.putStringSet("feeds", feedDates.map { dateFormatIn.format(it) }.toMutableSet())
-        }
-        else if(field == TYPE_SHED) {
-            shedDates.add(date)
-            editor.putStringSet("sheds", shedDates.map { dateFormatIn.format(it) }.toMutableSet())
-        }
-
-        editor.apply()
-        updateDateViews()
-    }
-
-    private fun updateDateViews() {
-        val lastFeed = feedDates.sorted().lastOrNull()
-        val lastShed = shedDates.sorted().lastOrNull()
-
-        lastFeedDate.setText(
-                if(lastFeed != null) dateFormatOut.format(lastFeed)
-                else "N/A")
-        lastShedDate.setText(
-                if(lastShed != null) dateFormatOut.format(lastShed)
-                else "N/A")
-    }
-
-    private fun checkForPrefs() = sharedPref.all.isNotEmpty() && sharedPref.contains("snake_name")
-
-    private fun doReset() {
-        feedDates.clear()
-        shedDates.clear()
-        sharedPref.edit()
-                .clear()
-                .putString("snake_name", DEFAULT_SNAKE_NAME)
-                .putString("ip_address", DEFAULT_IP_ADDRESS)
-                .putString("filename", DEFAULT_FILE_NAME)
-                .putString("remote_path", DEFAULT_REMOTE_PATH)
-                .putString("user", DEFAULT_USER)
-                .putString("password", DEFAULT_PASSWORD)
-                .putStringSet("feeds", mutableSetOf())
-                .putStringSet("sheds", mutableSetOf())
-                .apply()
-
-    }
-
-    private fun save() {
-        FtpClient(sharedPref.getString("ip_address", DEFAULT_IP_ADDRESS),
-                sharedPref.getString("user", DEFAULT_USER),
-                sharedPref.getString("pass", DEFAULT_PASSWORD))
-                .sync(sharedPref.getString("remote_path", DEFAULT_REMOTE_PATH),
-                        sharedPref.getString("filename", DEFAULT_FILE_NAME), getSaveStream()) {
-                    runOnUiThread({
-                        Toast.makeText(applicationContext,
-                                if(it == "1") "File pushed to server."
-                                else "Unable to push file to server.", Toast.LENGTH_SHORT).show()
-                    })
-                }
-    }
-
-    private fun load(name: String = sharedPref.getString("filename", DEFAULT_FILE_NAME)) {
-        FtpClient(sharedPref.getString("ip_address", DEFAULT_IP_ADDRESS),
-                sharedPref.getString("user", DEFAULT_USER),
-                sharedPref.getString("pass", DEFAULT_PASSWORD))
-                .sync(sharedPref.getString("remote_path", DEFAULT_REMOTE_PATH),name) {
-                    runOnUiThread({
-                        if (it == "0")
-                            Toast.makeText(applicationContext, "Unable to load file from server.", Toast.LENGTH_SHORT).show()
-                        else {
-                            Toast.makeText(applicationContext, "File pulled from server.", Toast.LENGTH_SHORT).show()
-                            try {
-                                parseJson(JSONObject(JSONTokener(it)))
-                            } catch (e: Exception) {
-                                Toast.makeText(applicationContext, "Error parsing file.", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    })
-                }
-    }
-
-    private fun getSaveStream(): InputStream {
-        return JSONObject()
-                .put("snake_name", snakeName)
-                .put("ip_address", sharedPref.getString("ip_address", DEFAULT_IP_ADDRESS))
-                .put("filename", sharedPref.getString("filename", DEFAULT_FILE_NAME))
-                .put("remote_path", sharedPref.getString("remote_path", DEFAULT_REMOTE_PATH))
-                .put("user", sharedPref.getString("user", DEFAULT_USER))
-                .put("pass", sharedPref.getString("pass", DEFAULT_PASSWORD))
-                .put("feeds", JSONArray(feedDates.map { dateFormatIn.format(it) }))
-                .put("sheds", JSONArray(shedDates.map { dateFormatIn.format(it) }))
-                .toString().byteInputStream()
-    }
-
-    private fun parseJson(data: JSONObject) {
-        val snake = data.getString("snake_name")
-        val ip_address = data.getString("ip_address")
-        val filename = data.getString("filename")
-        val remote_path = data.getString("remote_path")
-        val user = data.getString("user")
-        val pass = data.getString("pass")
-        val feeds = data.getJSONArray("feeds")
-        val sheds = data.getJSONArray("sheds")
-
-        val feedSet = mutableSetOf<Date>()
-        val shedSet = mutableSetOf<Date>()
-
-        var pos = 0
-        while(!feeds.isNull(pos)) feedSet.add(dateFormatIn.parse(feeds.getString(pos++)))
-
-        pos = 0
-        while(!sheds.isNull(pos)) shedSet.add(dateFormatIn.parse(sheds.getString(pos++)))
-
-        saveData(snake, ip_address, filename, remote_path, user, pass, feedSet, shedSet)
-    }
-
-    private fun saveData(snake: String, ip: String, filename: String, remote_path: String, user: String,
-                 pass: String, feeds: Set<Date>, sheds: Set<Date>) {
-        sharedPref.edit()
-                .putString("snake_name", snake)
-                .putString("ip_address", ip)
-                .putString("filename", filename)
-                .putString("remote_path", remote_path)
-                .putString("user", user)
-                .putString("pass", pass)
-                .putStringSet("feeds", feeds.map { dateFormatIn.format(it) }.toSet())
-                .putStringSet("sheds", sheds.map { dateFormatIn.format(it) }.toSet())
-                .apply()
-
-        loadData()
-    }
-
     internal companion object {
-        private lateinit var sharedPref: SharedPreferences
-
-        private var feedDates = mutableSetOf<Date>()
-        private var shedDates = mutableSetOf<Date>()
+        private val DEFAULT_SNAKE = "Monty Python"
 
         internal val dateFormatIn = SimpleDateFormat("MM-dd-yy", Locale.US)
         internal val dateFormatOut = SimpleDateFormat("EE MM/dd/yy", Locale.US)
-
-        private val DEFAULT_SNAKE_NAME = "Noodle"
-        private val DEFAULT_IP_ADDRESS = "192.168.0.5"
-        private val DEFAULT_FILE_NAME = "Pocket Noodle.json"
-        private val DEFAULT_REMOTE_PATH = "/Documents/"
-        private val DEFAULT_USER = "anon"
-        private val DEFAULT_PASSWORD = ""
 
         internal val TYPE_FEED = 0
         internal val TYPE_SHED = 1

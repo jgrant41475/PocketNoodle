@@ -1,37 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="App Settings">
-
         <EditTextPreference
-            android:key="snake_name"
-            android:title="Snake's Name"
-            android:summary="Name of snake."/>
-
-        <EditTextPreference
-            android:key="filename"
-            android:title="File name"
-            android:summary="File backup name.  NOTE: .json file extension is optional however is currently the only format supported." />
-
+            android:key="default_snake"
+            android:title="Default Profile"
+            android:summary="Name of profile to load on startup." />
     </PreferenceCategory>
     <PreferenceCategory android:title="Remote FTP Server" >
-
         <EditTextPreference
-            android:key="ip_address"
+            android:key="ftp_server_ip"
             android:title="IP Address"
             android:summary="IP Address of the computer you are syncing to.  Address must be in proper dot-decimal notation." />
 
         <EditTextPreference
-            android:key="user"
+            android:key="ftp_server_user"
             android:title="Username"
             android:summary="User login for remote server" />
 
         <EditTextPreference
-            android:key="pass"
+            android:key="ftp_server_pass"
             android:title="Password"
             android:summary="Password for remote server" />
 
         <EditTextPreference
-            android:key="remote_path"
+            android:key="ftp_server_file"
+            android:title="File name"
+            android:summary="File backup name.  NOTE: .json file extension is optional however is currently the only format supported." />
+
+        <EditTextPreference
+            android:key="ftp_server_path"
             android:title="Filepath"
             android:summary="Filepath of the file that will be stored on remote server." />
     </PreferenceCategory>
