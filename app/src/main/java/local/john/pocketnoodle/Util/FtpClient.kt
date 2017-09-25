@@ -1,6 +1,5 @@
 package local.john.pocketnoodle.Util
 
-import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
 import org.apache.commons.net.ftp.FTPClient
@@ -27,7 +26,6 @@ internal class FtpClient(private val server: String, private val user: String, p
                 throw Exception("Server refused connection.")
             } else return@connect true
         } catch (e: Exception) {
-            Log.e("DEBUGGING_TAG", "Encountered error: ${e.message}")
             return@connect false
         }
     }
@@ -51,7 +49,6 @@ internal class FtpClient(private val server: String, private val user: String, p
                     } else throw Exception("Invalid login.")
                 } else throw Exception("Connection refused.")
             } catch (e: Exception) {
-                Log.e("DEBUGGING_TAG", "Error caught: ${e.message}")
                 operation("0")
             } finally {
                 try {

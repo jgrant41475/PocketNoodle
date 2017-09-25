@@ -13,9 +13,11 @@
     <string name="button_feedlog_text">View Feed Log</string>
     <string name="button_shedlog_text">View Shed Log</string>
     <string name="reset_data">Reset Data</string>
-    <string name="load">Quick Load</string>
     <string name="save">Quick Save</string>
     <string name="settings">Settings</string>
     <string name="title_activity_log">Pocket Noodle Logs</string>
     <string name="profiles">Profiles</string>
+    <string name="add_profile">Add Profile</string>
+    <string name="del_profile">Delete Current Profile</string>
+    <string name="dialog_prompt_message">Name of profile to create:</string>
 </resources>
