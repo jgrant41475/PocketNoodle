@@ -14,23 +14,24 @@ internal data class Snakes(private val snakes: MutableList<Snake>) {
 
     internal fun update(newSnake: Snake) {
         snakes.removeAt(snakes.indices.map { it to snakes[it] }
-                                      .filter { (_, snake) -> snake.name == newSnake.name }[0]
-                                      .first)
+                .filter { (_, snake) -> snake.name == newSnake.name }[0]
+                .first)
         snakes.add(newSnake)
     }
 
-    internal fun get(pos: Int) = if(pos < size) snakes[pos]
-                                 else null
+    internal fun get(pos: Int) =
+            if (pos < snakes.size) snakes[pos]
+            else null
 
     internal fun get(name: String) = snakes.firstOrNull { it.name == name }
 
     internal fun getNames() = snakes.map { it.name }.toTypedArray()
 
     internal fun remove(name: String): Boolean {
-        for(pos in snakes.indices) {
+        for (pos in snakes.indices) {
             val snake = snakes[pos]
 
-            if(snake.name == name) {
+            if (snake.name == name) {
                 snakes.removeAt(pos)
                 return true
             }
@@ -39,26 +40,34 @@ internal data class Snakes(private val snakes: MutableList<Snake>) {
     }
 
     internal fun add(name: String): Boolean {
-        if(snakes.any { it.name == name })
+        if (snakes.any { it.name == name })
             return false
 
         return snakes.add(Snake(name, mutableListOf(), mutableListOf()))
     }
-
-    private val size: Int
-        get() = snakes.size
 }
+
 internal data class Snake(internal val name: String,
                           internal val feedDates: MutableList<String>,
                           internal val shedDates: MutableList<String>) {
     override fun toString(): String {
         val feeds = when {
-            feedDates.size > 1 -> try { feedDates.map { """"$it"""" }.reduce { a,b -> "$a,$b" } } catch (e: UnsupportedOperationException) { "" }
+            feedDates.size > 1 -> try {
+                feedDates.map { """"$it"""" }
+                        .reduce { a, b -> "$a,$b" }
+            } catch (e: UnsupportedOperationException) {
+                ""
+            }
             feedDates.size == 1 -> """"${feedDates[0]}""""
             else -> ""
         }
         val sheds = when {
-            shedDates.size > 1 -> try { shedDates.map { """"$it"""" }.reduce { a, b -> "$a,$b" } } catch (e: UnsupportedOperationException) { "" }
+            shedDates.size > 1 -> try {
+                shedDates.map { """"$it"""" }
+                        .reduce { a, b -> "$a,$b" }
+            } catch (e: UnsupportedOperationException) {
+                ""
+            }
             shedDates.size == 1 -> """"${shedDates[0]}""""
             else -> ""
         }
@@ -71,7 +80,7 @@ internal fun parseJSON(list: JSONArray): MutableList<Snake> {
     var i = 0
     val temp = mutableListOf<Snake>()
 
-    while(i < list.length()) {
+    while (i < list.length()) {
         val cur = list.getJSONObject(i++)
         val name = cur.getString("name")
         val feeds = cur.getJSONArray("feeds")
@@ -81,11 +90,11 @@ internal fun parseJSON(list: JSONArray): MutableList<Snake> {
         val tempSheds = mutableListOf<String>()
 
         var pos = 0
-        while(pos < feeds.length())
+        while (pos < feeds.length())
             tempFeeds.add(feeds[pos++].toString())
 
         pos = 0
-        while(pos < sheds.length())
+        while (pos < sheds.length())
             tempSheds.add(sheds[pos++].toString())
 
         temp.add(Snake(name, tempFeeds, tempSheds))

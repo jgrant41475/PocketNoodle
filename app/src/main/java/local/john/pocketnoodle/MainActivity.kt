@@ -35,9 +35,9 @@ internal class MainActivity : AppCompatActivity() {
         }
 
     // FTP Server default configuration
-    private var ftpServerIP = "192.168.0.5"
+    private var ftpServerIP = "192.168.0.2"
     private var ftpServerFileName = "PocketNoodle.json"
-    private var ftpServerPath = "/Documents/"
+    private var ftpServerPath = "/"
     private var ftpServerUser = "anon"
     private var ftpServerPass = ""
 
@@ -74,14 +74,13 @@ internal class MainActivity : AppCompatActivity() {
             buttonProfiles.setOnClickListener {
                 AlertDialog.Builder(this)
                         .setTitle("Change Profile")
-                        .setNeutralButton("Cancel", { _, _ -> })
+                        .setNeutralButton("Cancel", null)
                         .setItems(snakes.getNames()) { _, pos ->
                             snakes.get(pos)?.let {
                                 saveProfiles()
                                 profile = it.name
                             }
-                        }
-                        .create().show()
+                        }.show()
             }
 
             buttonFeedLog.setOnClickListener {
@@ -107,8 +106,6 @@ internal class MainActivity : AppCompatActivity() {
                         DialogInterface.BUTTON_NEGATIVE -> {
                             confirmYesNo("Pull from server") { pullFromServer() }
                         }
-                        DialogInterface.BUTTON_NEUTRAL -> {
-                        }
                     }
                 }
                 AlertDialog.Builder(this)
@@ -116,8 +113,7 @@ internal class MainActivity : AppCompatActivity() {
                         .setMessage("Push or Pull?")
                         .setPositiveButton("Push", dialogClickListener)
                         .setNegativeButton("Pull", dialogClickListener)
-                        .setNeutralButton("Cancel", dialogClickListener)
-                        .setCancelable(true)
+                        .setNeutralButton("Cancel", { _, _ -> })
                         .show()
             }
         }
@@ -143,7 +139,7 @@ internal class MainActivity : AppCompatActivity() {
         // Reload from local, trigger update
         if (loaded) {
             loadProfiles()
-            profile = profile
+            profile = if (profile.isNotBlank()) profile else DEFAULT_SNAKE
         }
     }
 
@@ -178,7 +174,7 @@ internal class MainActivity : AppCompatActivity() {
                                 }
                             } else
                                 toast("Profile already exists or input was blank.")
-                        }).create().show()
+                        }).show()
 
                 true
             }
@@ -210,23 +206,28 @@ internal class MainActivity : AppCompatActivity() {
     }
 
     private fun updateViews() {
-        var lastFeed: Date? = null
-        var lastShed: Date? = null
+        if (profile != "") {
+            snake?.let {
+                val lastFeed = it.feedDates
+                        .map { dateFormatIn.parse(it) }
+                        .sorted()
+                        .lastOrNull()
 
-        snake?.let {
-            lastFeed = it.feedDates
-                    .map { dateFormatIn.parse(it) }
-                    .sorted()
-                    .lastOrNull()
+                val lastShed = it.shedDates
+                        .map { dateFormatIn.parse(it) }
+                        .sorted()
+                        .lastOrNull()
 
-            lastShed = it.shedDates
-                    .map { dateFormatIn.parse(it) }
-                    .sorted()
-                    .lastOrNull()
+                toggleViews(true)
+                lastFeedDate.setText(if (lastFeed == null) "N/A" else dateFormatOut.format(lastFeed))
+                lastShedDate.setText(if (lastShed == null) "N/A" else dateFormatOut.format(lastShed))
+            }
+        } else {
+            toggleViews(false)
+
+            lastFeedDate.setText("N/A")
+            lastShedDate.setText("N/A")
         }
-
-        lastFeedDate.setText(if (lastFeed == null) "N/A" else dateFormatOut.format(lastFeed))
-        lastShedDate.setText(if (lastShed == null) "N/A" else dateFormatOut.format(lastShed))
     }
 
     private fun doReset() {
@@ -259,9 +260,12 @@ internal class MainActivity : AppCompatActivity() {
 
     private fun loadProfile(name: String) = snakes.get(name)?.let { snake = it } ?: run { snake = null }
 
-    private fun saveProfiles() = sharedPref?.edit()
-            ?.putString("snakes", snakes.toString())
-            ?.apply()
+    @Suppress("ReplaceSingleLineLet")
+    private fun saveProfiles() = sharedPref?.let {
+                it.edit()
+                .putString("snakes", snakes.toString())
+                .apply()
+    }
 
     private fun confirmYesNo(title: String = "Pocket Noodle", operation: () -> Unit) {
         AlertDialog.Builder(this)
@@ -357,6 +361,14 @@ internal class MainActivity : AppCompatActivity() {
 
         loadProfiles()
         profile = lastLoaded
+    }
+
+    private fun toggleViews(state: Boolean) {
+        buttonFeed.isEnabled = state
+        buttonShed.isEnabled = state
+
+        buttonFeedLog.isEnabled = state
+        buttonShedLog.isEnabled = state
     }
 
     internal companion object {

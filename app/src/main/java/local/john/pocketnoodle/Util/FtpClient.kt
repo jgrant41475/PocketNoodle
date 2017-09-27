@@ -37,13 +37,13 @@ internal class FtpClient(private val server: String, private val user: String, p
                     if (connection.login(user, pass)) {
                         if (connection.changeWorkingDirectory(path)) {
                             operation(
-                                    if(stream != null)                                              // Push
-                                        if(connection.storeFile(path + name, stream)) "1"
+                                    if (stream != null)                                              // Push
+                                        if (connection.storeFile(path + name, stream)) "1"
                                         else "0"
                                     else                                                            // Pull
                                         connection.retrieveFileStream(path + name)
-                                            .bufferedReader()
-                                            .readText()
+                                                .bufferedReader()
+                                                .readText()
                             )
                         } else throw Exception("Could not access directory '$path'")
                     } else throw Exception("Invalid login.")
@@ -54,7 +54,8 @@ internal class FtpClient(private val server: String, private val user: String, p
                 try {
                     connection.logout()
                     connection.disconnect()
-                } catch(e: Exception) {}
+                } catch (e: Exception) {
+                }
             }
         }
     }

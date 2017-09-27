@@ -49,7 +49,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="137dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:labelFor="@id/lastFeedDate"
         android:text="@string/textview_lastfeed_text"
         app:layout_constraintStart_toStartOf="parent"

@@ -38,7 +38,7 @@ internal class LogActivity : AppCompatActivity(), AdapterView.OnItemLongClickLis
         logType = intent?.extras?.getInt("type") ?: -1
         name = intent?.extras?.getString("snake") ?: ""
 
-        if(name.isNullOrBlank())
+        if (name.isNullOrBlank())
             return
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
@@ -46,17 +46,17 @@ internal class LogActivity : AppCompatActivity(), AdapterView.OnItemLongClickLis
         allSnakes = Snakes(parseJSON(JSONArray(sharedPreferences?.getString("snakes", "") ?: "")))
         snake = allSnakes?.get(name!!)
 
-        log = when(logType) {
+        log = when (logType) {
             MainActivity.TYPE_FEED -> snake?.feedDates ?: mutableListOf()
             MainActivity.TYPE_SHED -> snake?.shedDates ?: mutableListOf()
             else -> mutableListOf()
         }
 
-        if(log.size > 0)
+        if (log.size > 0)
             log = log.map { MainActivity.dateFormatIn.parse(it) }
-                     .sortedDescending()
-                     .map { MainActivity.dateFormatOut.format(it) }
-                     .toMutableList()
+                    .sortedDescending()
+                    .map { MainActivity.dateFormatOut.format(it) }
+                    .toMutableList()
         else
             log.add("N/A")
 
@@ -66,18 +66,22 @@ internal class LogActivity : AppCompatActivity(), AdapterView.OnItemLongClickLis
     }
 
     override fun onItemLongClick(parent: AdapterView<*>, view: View, pos: Int, id: Long): Boolean {
-        if(log[pos] != "N/A") {
+        if (log[pos] != "N/A") {
             val dialogClickListener = DialogInterface.OnClickListener { _, choice ->
                 if (choice == DialogInterface.BUTTON_POSITIVE) {
                     val match = MainActivity.dateFormatIn.format(MainActivity.dateFormatOut.parse(log[pos]))
 
                     when (logType) {
-                        MainActivity.TYPE_FEED -> { snake?.feedDates?.remove(match) }
-                        MainActivity.TYPE_SHED -> { snake?.shedDates?.remove(match) }
+                        MainActivity.TYPE_FEED -> {
+                            snake?.feedDates?.remove(match)
+                        }
+                        MainActivity.TYPE_SHED -> {
+                            snake?.shedDates?.remove(match)
+                        }
                     }
 
                     log.removeAt(pos)
-                    if(log.size == 0)
+                    if (log.size == 0)
                         log.add("N/A")
 
                     allSnakes?.update(snake!!)
@@ -100,7 +104,7 @@ internal class LogActivity : AppCompatActivity(), AdapterView.OnItemLongClickLis
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if(item.itemId == android.R.id.home) {
+        if (item.itemId == android.R.id.home) {
             NavUtils.navigateUpTo(this, NavUtils.getParentActivityIntent(this))
             return true
         }
